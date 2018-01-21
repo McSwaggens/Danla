@@ -4,13 +4,14 @@
 
 
 #include "Time.h"
-#include "ChronoHelper.h"
+#include "SystemTime.h"
 
 // Private
 
 TICKS ticks;
 TICKS lastTicks;
 TICKS startTicks = -1;
+TICKS frequency;
 
 float lastTime;
 
@@ -19,9 +20,11 @@ float lastTime;
 float time = 0.0f;
 float delta = 0.0f;
 
+#define WAIT_UNTIL_FRESH_TIME false
+
 float TicksToSeconds (TICKS ticks)
 {
-	return (float)(ticks / 1000000000.0);
+	return (float)(ticks / (double)frequency);
 }
 
 void PollTimeFull ()
@@ -29,12 +32,20 @@ void PollTimeFull ()
 	if (startTicks == -1)
 	{
 		startTicks = GetSystemTime();
+		
+		frequency = GetSystemTimeFrequency();
 	}
-	
+
+#if WAIT_UNTIL_FRESH_TIME
 	do
 	{
+#endif
+	
 		ticks = GetSystemTime();
+	
+#if WAIT_UNTIL_FRESH_TIME
 	} while (ticks == lastTicks);
+#endif
 	
 	lastTime = time;
 	
@@ -48,7 +59,7 @@ void PollTimeFull ()
 
 double GetTimeRaw ()
 {
-	return (GetSystemTime() / 1000000000.0);
+	return (GetSystemTime() / (double)frequency);
 }
 
 float GetTime ()

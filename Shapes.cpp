@@ -20,6 +20,8 @@ HAttributeBatch Shapes::triangle;
 HAttributeBatch Shapes::positionedQuad;
 HAttributeBatch Shapes::positionedTriangle;
 
+int drawCalls = 0;
+
 void Shapes::Initialize ()
 {
 	triangleVertices = new AttributeBuffer<Vector2> (0, AttributeUsage::PerVertex,
@@ -62,11 +64,11 @@ void Shapes::Initialize ()
 	
 	positionBuffer = new AttributeBuffer<Vector2>(2, AttributeUsage::PerDraw);
 	
-	quad = new AttributeBatch({ quadVertices.CastTo<AttributeBufferBase>(), quadUV.CastTo<AttributeBufferBase>() });
-	triangle = new AttributeBatch({ triangleVertices.CastTo<AttributeBufferBase>(), triangleUV.CastTo<AttributeBufferBase>() });
+	quad = new AttributeBatch({ quadVertices, quadUV });
+	triangle = new AttributeBatch({ triangleVertices, triangleUV });
 	
-	positionedQuad = new AttributeBatch({ quadVertices.CastTo<AttributeBufferBase>(), quadUV.CastTo<AttributeBufferBase>(), positionBuffer.CastTo<AttributeBufferBase>() });
-	positionedTriangle = new AttributeBatch({ triangleVertices.CastTo<AttributeBufferBase>(), triangleUV.CastTo<AttributeBufferBase>(), positionBuffer.CastTo<AttributeBufferBase>() });
+	positionedQuad = new AttributeBatch({ quadVertices, quadUV, positionBuffer });
+	positionedTriangle = new AttributeBatch({ triangleVertices, triangleUV, positionBuffer });
 }
 
 void DrawShape (HAttributeBatch shape)
@@ -76,7 +78,7 @@ void DrawShape (HAttributeBatch shape)
 	shape->Enable();
 	
 	// Assuming vertices is element 0
-	HAttributeBuffer <Vector2> vertBuffer = shape->buffers[0].CastTo<AttributeBuffer<Vector2>>();
+	HAttributeBuffer<Vector2> vertexBuffer = shape->buffers[0].CastTo<AttributeBuffer<Vector2>>();
 	
 	int drawCount = 1;
 	
@@ -85,5 +87,7 @@ void DrawShape (HAttributeBatch shape)
 		drawCount = positionBuffer->elements;
 	}
 	
-	glDrawArraysInstanced(GL_TRIANGLES, 0, vertBuffer->elements, drawCount);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexBuffer->elements, drawCount);
+	
+	drawCalls++;
 }

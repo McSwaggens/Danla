@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "Standard.h"
+#include <stdio.h>
 
 class HandleLink;
 template<typename T>
@@ -39,12 +39,13 @@ public:
 	~Handle ();
 	
 	inline void Dereference ();
+	inline void GhostDereference ();
 	inline T* Get ();
 	bool IsValid ();
 	void Delete ();
 	
 	template<typename Other>
-	Handle<Other> CastTo ();
+	inline Handle<Other>* CastTo ();
 	
 	inline T* operator->();
 	inline Handle<T>& operator=(const Handle<T>& rh);
@@ -58,6 +59,9 @@ public:
 	
 	bool operator==(const void* rh);
 	bool operator!=(const void* rh);
+	
+	template<typename U>
+	inline operator Handle<U> () const;
 	
 	inline explicit operator bool() const;
 	inline operator bool ();
@@ -74,7 +78,10 @@ template<typename T>
 Handle<T>::Handle (const Handle<T>& handle)
 {
 	link = handle.link;
-	link->AddReference ();
+	if (link)
+	{
+		link->AddReference ();
+	}
 }
 
 template<typename T>
@@ -159,10 +166,16 @@ inline void Handle<T>::Dereference ()
 }
 
 template<typename T>
-template<typename Other>
-Handle<Other> Handle<T>::CastTo ()
+void Handle<T>::GhostDereference ()
 {
-	return Handle<Other>((const Other*)link->object);
+	link->PopReference();
+}
+
+template<typename T>
+template<typename Other>
+inline Handle<Other>* Handle<T>::CastTo ()
+{
+	return (Handle<Other>*)(this);
 }
 
 template<typename T>
@@ -239,4 +252,11 @@ template<typename T>
 inline Handle<T>::operator bool ()
 {
 	return (link != NULL && link->object != NULL);
+}
+
+template<typename T>
+template<typename U>
+Handle<T>::operator Handle<U> () const
+{
+	return Handle<U>((U*)((T*)link->object));
 }

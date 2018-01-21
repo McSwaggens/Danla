@@ -1,4 +1,3 @@
-#include <iostream>
 #include "Danla.h"
 
 int main()

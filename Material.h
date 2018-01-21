@@ -1,7 +1,11 @@
 #pragma once
 
 #include "Standard.h"
+_HCLASS(Material);
+
 #include "Shader.h"
+#include "Texture.h"
+#include "TextureUnit.h"
 #include <vector>
 
 class UniformCell
@@ -16,13 +20,26 @@ public:
 	UniformCell();
 	UniformCell (Uniform* uniform, String name);
 	bool Initialize (HShader shader);
+	virtual void Upload ();
+};
+
+class UniformTextureCell : public UniformCell
+{
+public:
+	HTexture texture;
+	TextureUnit textureUnit;
+	
+	
+	UniformTextureCell (HTexture texture, String name, TextureUnit textureUnit);
+	
+	void Upload () override;
 };
 
 HCLASS(Material) : public Object
 {
 public:
 	HShader shader;
-	std::vector<UniformCell> uniformCells;
+	std::vector<UniformCell*> uniformCells;
 	
 	// Statics
 	
@@ -31,39 +48,50 @@ public:
 	// Statics
 	
 	Material ();
-	Material (HShader shader);
+	explicit Material (HShader shader);
 	
 	void Enable ();
 	void Initialize (HShader shader);
+	
+	~Material() override;
 };
 
-extern std::vector<UniformCell> uniformCellStack;
+extern std::vector<UniformCell*> uniformCellStack;
 
 template<typename T, typename std::enable_if<std::is_base_of<Uniform, T>::value>::type* = nullptr>
-UniformCell CreateCell (String name, T t)
+UniformCell* CreateCell (String name, T& t)
 {
-	UniformCell uCell ((Uniform*)&t, name);
-	uCell.uploadFunctionPtr = (XFN_UploadUniform)&T::UploadUniform;
+	UniformCell* uCell = new UniformCell ((Uniform*)&t, name);
+	uCell->uploadFunctionPtr = (XFN_UploadUniform)&T::UploadUniform;
 	
 	return uCell;
 }
 
 template<typename T, typename std::enable_if<std::is_base_of<Uniform, T>::value>::type* = nullptr>
-T CreateUniform (String name)
+T CreateUniform (String name, T& txx)
 {
 	T t;
 	
-	UniformCell uCell = CreateCell(name, t);
+	UniformCell* uCell = CreateCell(name, txx);
 	
 	uniformCellStack.push_back (uCell);
 	
 	return t;
 }
 
-std::vector<UniformCell> SwapUniformCellStack ();
 
-#define MATERIAL(m) HCLASS(m) : public Material { public: m (HShader shader) : Material(shader) { this->uniformCells = SwapUniformCellStack(); Initialize(shader); }
-#define UNIFORM(type, name) type name = CreateUniform<type> (#name)
+HTexture CreateUniformTexture (String name, TextureUnit textureUnit);
+
+
+
+
+
+std::vector<UniformCell*> SwapUniformCellStack ();
+
+#define MATERIALO(m, parent) HCLASS(m) : public parent { public: inline m (HShader shader) : parent(shader) { this->uniformCells = SwapUniformCellStack(); Initialize(shader); }
+#define MATERIAL(m) MATERIALO(m, Material)
+#define UNIFORM(type, name) type name = CreateUniform<type> (#name, name)
+#define TEXTURE(name, texUnit) HTexture name = CreateUniformTexture (#name, TextureUnit(texUnit))
 #define END_MATERIAL }
 
 /* // Material Template

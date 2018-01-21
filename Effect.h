@@ -12,7 +12,8 @@ HCLASS(EffectBase) : public Object
 public:
 	String name = "Unknown effect";
 	int iterations = 1;
-	virtual void Use ();
+	virtual void Use () = 0;
+	virtual HMaterial GetMaterial () = 0;
 };
 
 #define HTEMPLATE template<typename T, typename std::enable_if<std::is_base_of<Material, T>::value>::type* = nullptr>
@@ -26,6 +27,7 @@ public:
 	Effect (Handle<T> material, String name, int iterations = 1);
 	
 	void Use () override;
+	HMaterial GetMaterial () override;
 };
 
 
@@ -41,4 +43,10 @@ template<typename T>
 void Effect<T>::Use ()
 {
 	material->Enable ();
+}
+
+template<typename T>
+HMaterial Effect<T>::GetMaterial ()
+{
+	return material.template CastTo<Material>();
 }

@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <string>
 
+#define ONCE(x) static bool __b_##__COUNTER__ = true; if (__b_##__COUNTER__) { __b_##__COUNTER__ = false; x; }
+
 typedef std::string String;
 typedef char* CString;
 
@@ -11,4 +13,4 @@ typedef char* CString;
 #include "Uniform.h"
 #include "Shader.h"
 #include "Vector2.h"
-#include "Buffer.h"
+#include "IVector2.h"

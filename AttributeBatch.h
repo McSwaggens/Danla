@@ -5,8 +5,6 @@
 #include "AttributeBuffer.h"
 #include <vector>
 
-
-
 HCLASS(AttributeBatch) : public Object
 {
 private:
@@ -20,6 +18,7 @@ public:
 	
 	void Add (std::vector<HAttributeBufferBase> _buffers);
 	void Enable ();
+	bool GetBufferWithAttributeID (int id, HandleLink*& attributeBufferBase);
 };
 
 

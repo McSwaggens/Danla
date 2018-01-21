@@ -6,4 +6,5 @@
 
 #define TICKS long long int
 
+TICKS GetSystemTimeFrequency ();
 TICKS GetSystemTime ();

@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "Danla.h"
+#include "Standard.h"
+#include "TextureUnit.h"
 
 
 HCLASS(Texture) : public Object, public Uniform
@@ -24,9 +25,23 @@ public:
 	void Delete();
 	
 	void UploadUniform (UniformID id);
+	void UploadUniformTexture (UniformID id, TextureUnit textureUnit);
+	void Bind (TextureUnit textureUnit);
+	void ClampMirror (bool x = true, bool y = true);
+	void MirroredRepeat (bool x = true, bool y = true);
+	void Repeat (bool x = true, bool y = true);
 	
-	void Bind (int textureUnit = TEXUNIT0);
+	/**
+	 * Pixelated then scaling.
+	 */
+	void SetInterpolationLinear();
+	
+	/**
+	 * Blurred when scaling.
+	 */
+	void SetInterpolationNearest ();
 };
 
+typedef void (Texture::*XFN_UploadUniformTexture)(UniformID id, TextureUnit textureUnit);
 
-
+HTexture LoadTexture (String fileName);

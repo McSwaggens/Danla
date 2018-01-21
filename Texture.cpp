@@ -35,11 +35,71 @@ void Texture::Delete ()
 
 void Texture::UploadUniform (UniformID id)
 {
-	glUniform1i(id, this->id);
+	printf ("Texture UploadUniform called! This shouldn't happen!\n");
 }
 
-void Texture::Bind (int textureUnit)
+void Texture::Bind (TextureUnit textureUnit)
 {
-	glActiveTexture(textureUnit);
+	glActiveTexture(textureUnit.GetGLTextureUnit());
 	glBindTexture(GL_TEXTURE_2D, id);
 }
+
+void Texture::UploadUniformTexture (UniformID _id, TextureUnit textureUnit)
+{
+	glUniform1i(_id, textureUnit.unit);
+	Bind(textureUnit);
+}
+
+void Texture::ClampMirror (bool x, bool y)
+{
+	if (x)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+	}
+	
+	if (y)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
+	}
+}
+
+void Texture::Repeat (bool x, bool y)
+{
+	if (x)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	}
+	
+	if (y)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+}
+
+void Texture::MirroredRepeat (bool x, bool y)
+{
+	if (x)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	}
+	
+	if (y)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	}
+}
+
+void Texture::SetInterpolationLinear ()
+{
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+
+void Texture::SetInterpolationNearest ()
+{
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+}
+
+

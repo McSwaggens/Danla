@@ -38,8 +38,6 @@ std::vector<ShaderSource> PreProcess (String code)
 	
 	std::vector<String> lines = Split (code);
 	
-	
-	
 	for (int i = 0; i < lines.size(); i++)
 	{
 		String line = lines[i];
@@ -54,7 +52,7 @@ std::vector<ShaderSource> PreProcess (String code)
 				{
 					if (currentShader == 0)
 					{
-						header = current;
+						header = current + standardShaderLibraryString;
 						
 						// printf ("Header: %s\n", header.c_str());
 					}

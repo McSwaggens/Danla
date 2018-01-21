@@ -70,7 +70,7 @@ void AttributeBatch::Enable ()
 
 bool AttributeBatch::DoesContainAttributeBufferID (int id)
 {
-	for (HAttributeBufferBase attributeBufferBase : buffers)
+	for (HAttributeBufferBase& attributeBufferBase : buffers)
 	{
 		if (attributeBufferBase->attributeNumber == id)
 		{
@@ -88,4 +88,18 @@ AttributeBatch::AttributeBatch (std::vector<HAttributeBufferBase> _buffers)
 
 AttributeBatch::AttributeBatch ()
 {
+}
+
+bool AttributeBatch::GetBufferWithAttributeID (int id, HandleLink*& attributeBufferBase)
+{
+	for (HAttributeBufferBase& _attributeBufferBase : buffers)
+	{
+		if (_attributeBufferBase->attributeNumber == id)
+		{
+			attributeBufferBase = _attributeBufferBase.link;
+			return true;
+		}
+	}
+	
+	return false;
 }

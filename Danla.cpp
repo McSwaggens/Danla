@@ -9,46 +9,70 @@
 #include "Shapes.h"
 #include <math.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
-#define M_PI 3.14159265358979323846
+#include "PostProcessing.h"
+#include "Keys.h"
+#include "Input.h"
+#include "TestActor.h"
+
+#include <windows.h>
 
 void MainGameLoop ();
 
 HWindow window;
 
-MATERIAL (UnitMaterial)
+MATERIALO (GaussianBlur, PostProcessorMaterial)
 END_MATERIAL;
 
-MATERIAL (PPCopyMaterial)
-	UNIFORM(Texture, u_InputTexture);
-END_MATERIAL;
-
-HPPCopyMaterial ppCopyMaterial;
-HPPCopyMaterial ppCopyMaterial2;
+HGaussianBlur gaussianBlurHorizontal;
+HGaussianBlur gaussianBlurVertical;
 HUnitMaterial unitMaterial;
+
+HWorld world;
 
 bool running = false;
 
+bool InitializeStandardShader ()
+{
+	std::ifstream ifstream("../Shaders/Standard.glsl");
+	if (ifstream.good())
+	{
+		std::stringstream buffer;
+		buffer << ifstream.rdbuf();
+		String str = buffer.str();
+		standardShaderLibraryString = str;
+		printf ("Standard shader library loaded.\n");
+		return true;
+	}
+	else
+	{
+		printf ("Could not find Standard shader library file...\n");
+		return false;
+	}
+}
+
 void StartDanla ()
 {
-	
 	setbuf(stdout, NULL);
 	
-	printf ("Starting Danla...\n");
+	HANDLE currentThread = GetCurrentProcess();
+	SetProcessAffinityMask(currentThread, 1UL << 3);
 	
-	//printf ("Sizeof Vector2 is %i bytes.\n", sizeof(Vector2));
+	printf ("Starting Danla...\n");
 	
 	if (running)
 	{
 		return;
 	}
-
+	
 	if (glfwInit () != GLFW_TRUE)
 	{
 		printf ("Failed to initialize GLFW\n");
 		return;
 	}
-
+	
 	window = new Window (1920, 1080, "Danla");
 	
 	glewExperimental = GL_TRUE;
@@ -59,30 +83,38 @@ void StartDanla ()
 		printf ("Unable to setup GL\n");
 		return;
 	}
-
+	
 	PrintErrors ();
 	
 	Shapes::Initialize();
 	
+	InitializeStandardShader ();
+	
 	defaultFrameBuffer = new FrameBuffer(0);
 	
-	HShader ppCopyShader = CreateShader ("PPCopy");
-	ppCopyMaterial = new PPCopyMaterial (ppCopyShader);
+	HShader gaussianShaderHorizontal = CreateShader ("GaussianBlurHorizontal");
+	gaussianBlurHorizontal = new GaussianBlur (gaussianShaderHorizontal);
 	
-	HShader ppCopyShader2 = CreateShader ("PPCopy2");
-	ppCopyMaterial2 = new PPCopyMaterial (ppCopyShader2);
+	HShader gaussianShaderVertical = CreateShader ("GaussianBlurVertical");
+	gaussianBlurVertical = new GaussianBlur (gaussianShaderVertical);
 	
 	HShader unitShader = CreateShader ("Unit");
 	unitMaterial = new UnitMaterial(unitShader);
-
+	
+	UseWindowForInput(window);
+	
+	world = new World();
+	
 	//printf ("Window references = %i\n", window.link->references);
-
+	
 	running = true;
-
+	
 	MainGameLoop ();
-
+	
+	window->SetVSync(true);
+	
 	// Shutdown
-
+	
 	ShutdownGL ();
 }
 
@@ -108,65 +140,103 @@ String AlphaBool (bool b)
 void MainGameLoop ()
 {
 	
+	HFrameBuffer gaussianBufferQuarterHDA = new FrameBuffer (true, false, IVector2(1920 / 4, 1080 / 4));
+	HFrameBuffer gaussianBufferQuarterHDB = new FrameBuffer (true, false, IVector2(1920 / 4, 1080 / 4));
+	HFrameBuffer gaussianBufferEighthHDA = new FrameBuffer (true, false, IVector2(1920 / 8, 1080 / 8));
+	HFrameBuffer gaussianBufferEighthHDB = new FrameBuffer (true, false, IVector2(1920 / 8, 1080 / 8));
 	
+	HFrameBuffer alphaBuffer = new FrameBuffer (true, true, true, true);
+	HFrameBuffer betaBuffer = new FrameBuffer (true, true, true, true);
 	
-	HFrameBuffer alphaBuffer = new FrameBuffer (true, true, true);
-	HFrameBuffer betaBuffer = new FrameBuffer (true, true, true);
+	HFrameBuffer renderBuffer = new FrameBuffer (true, true, true, true);
 	
 	HPostProcessingStack ppStack = new PostProcessingStack(alphaBuffer, betaBuffer);
+	ppStack->effects = {  };
+	
+	int numberOfTriangles = 1;
+	
+	
+	HTestActor testActor = Spawn(world, new TestActor());
+	testActor.GhostDereference();
+	
+	HTestActor testActor2 = Spawn(world, new TestActor());
+	testActor2.GhostDereference();
 	
 	
 	while (running)
 	{
-		double startTime = GetTimeRaw();
-		
 		PollTimeFull();
 		
 		window->PollEvents ();
 		
-		static float foo = 0.0f;
 		
-		foo += 10 * delta;
+		if (IsKeyDown(Keys::Up))
+		{
+			numberOfTriangles++;
+		}
 		
-		positionBuffer->Upload
-		(
-				{
-						Vector2(0, 0),
-				}
-		);
+		if (IsKeyDown(Keys::Down))
+		{
+			if (numberOfTriangles != 0)
+			{
+				numberOfTriangles--;
+			}
+		}
 		
+		TickInputSystem();
 		
-		alphaBuffer->BindDraw();
+		static float lastTime = 0;
+		static int ticksThisSecond = 0;
 		
-		glEnable (GL_DEPTH_TEST);
-		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.15f, 0.05f, 0.15f, 1.0f);
+		ticksThisSecond++;
+		
+		if (time - lastTime >= 1)
+		{
+			
+			std::stringstream newTitle;
+			newTitle << "Danla, ";
+			newTitle << "Triangles: ";
+			newTitle << TestActor::count;
+			newTitle << ", FPS: ";
+			newTitle << ticksThisSecond;
+			window->SetTitle(newTitle.str());
+			
+			//printf ("%s\n", newTitle.str().c_str());
+			
+			ticksThisSecond = 0;
+			lastTime = time;
+		}
+		
+		// Cool gradient
+		// 89 89 222
+		// 140 184 255
+		
+		renderBuffer->BindDraw();
+		
+		renderBuffer->Clear(Color(0.15f, 0.05f, 0.15f));
 		
 		unitMaterial->Enable ();
 		
-		DrawShape(Shapes::positionedTriangle);
+		world->ComputeActors();
+		world->Render();
+		world->DispatchRenderGroups();
 		
+		if (IsKeyDown(Keys::B))
+		{
+			FrameBuffer::Copy(renderBuffer, gaussianBufferQuarterHDA, false);
+			
+			PostProcess(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, gaussianBlurVertical);
+			PostProcess(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, gaussianBlurHorizontal);
+			
+			FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferEighthHDA, false);
+			
+			PostProcess(gaussianBufferEighthHDA, gaussianBufferEighthHDB, gaussianBlurHorizontal);
+			PostProcess(gaussianBufferEighthHDB, gaussianBufferEighthHDA, gaussianBlurVertical);
+		}
 		
+		FrameBuffer::Copy(IsKeyDown(Keys::B) ? gaussianBufferEighthHDA : renderBuffer, defaultFrameBuffer, true);
 		
-		alphaBuffer->BindRead();
-		betaBuffer->BindDraw();
-		
-		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		ppCopyMaterial2->Enable();
-		
-		DrawShape(Shapes::quad);
-		
-		FrameBuffer::Copy(betaBuffer, defaultFrameBuffer);
-		
-		double endTime = GetTimeRaw();
-		double frameTime = endTime - startTime;
-		printf ("renderTime PRE_SWAP: %lfms\n", frameTime * 1000.0);
 		
 		window->SwapBuffers ();
-		
-//		endTime = GetTimeRaw();
-//		frameTime = endTime - startTime;
-//		printf ("renderTime POST_SWAP: %lfms\n", frameTime * 1000.0);
 	}
 }

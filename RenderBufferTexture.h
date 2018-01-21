@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "Danla.h"
-
+#include "Standard.h"
 
 HCLASS(RenderBufferTexture) : Object
 {

@@ -4,6 +4,7 @@
 
 #include "PostProcessingStack.h"
 #include "OpenGL.h"
+#include "PostProcessing.h"
 
 PostProcessingStack::PostProcessingStack ()
 {
@@ -18,24 +19,27 @@ PostProcessingStack::PostProcessingStack (HFrameBuffer alphaBuffer, HFrameBuffer
 
 bool PostProcessingStack::Works ()
 {
-	return alphaBuffer && betaBuffer && effects.size();
+	return alphaBuffer && betaBuffer && effects.size() > 0;
 }
 
 HFrameBuffer PostProcessingStack::Process (HFrameBuffer sourceBuffer)
 {
-	bufferFlip = false;
+	bufferFlip = true;
 	
 	bool first = true;
 	
+	int totalIters = 0;
+	
 	HFrameBuffer primaryBuffer;
 	HFrameBuffer secondaryBuffer;
+	
 	
 	
 	if (Works() && sourceBuffer)
 	{
 		for (auto effect : effects)
 		{
-			for (int iter = 0; iter < effect->iterations; iter++)
+			for (int iter = 0; iter < effect->iterations; iter++, totalIters++)
 			{
 				// Setup our primary and secondary buffers
 				if (first)
@@ -53,14 +57,17 @@ HFrameBuffer PostProcessingStack::Process (HFrameBuffer sourceBuffer)
 					bufferFlip = !bufferFlip;
 				}
 				
-				primaryBuffer->BindRead();
-				secondaryBuffer->BindDraw();
-				
-				effect->Use();
-				
-				DrawShape(Shapes::quad);
+				PostProcess(primaryBuffer, secondaryBuffer, effect->GetMaterial());
 				
 			}
+		}
+		if (totalIters == 0)
+		{
+			return sourceBuffer;
+		}
+		else
+		{
+			return secondaryBuffer;
 		}
 	}
 	

@@ -2,16 +2,25 @@
 
 
 #include "Standard.h"
+#include "SafeList.h"
+#include "Entity.h"
+#include "Actor.h"
+#include "World.h"
+#include "Math.h"
 #include "Window.h"
-#include "AttributeBuffer.h"
 #include "Time.h"
 #include "Shapes.h"
-
-#define TEXUNIT0 0x84C0
+#include "Material.h"
 
 extern HWindow window;
 
 extern HAttributeBuffer<Vector2> positionBuffer;
+extern HWorld world;
+
+class UnitMaterial;using HUnitMaterial=Handle<UnitMaterial>;;class UnitMaterial:public Material{public:inline UnitMaterial(HShader shader):Material(shader){this->uniformCells=SwapUniformCellStack();Initialize(shader);}};
+
+extern HUnitMaterial unitMaterial;
+
 
 void StartDanla ();
 void ShutdownDanla ();

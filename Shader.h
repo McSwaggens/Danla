@@ -1,6 +1,10 @@
 #pragma once
 
+
+#include "Standard.h"
 #include "Handle.h"
+
+extern String standardShaderLibraryString;
 
 HCLASS(Shader) : public Object
 {

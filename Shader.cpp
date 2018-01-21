@@ -9,6 +9,8 @@
 #include <unistd.h>
 
 
+String standardShaderLibraryString;
+
 Shader::Shader (int _program)
 {
 	program = _program;

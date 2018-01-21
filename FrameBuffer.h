@@ -5,6 +5,8 @@
 #include "Window.h"
 #include "Texture.h"
 #include "RenderBufferTexture.h"
+#include "Color.h"
+#include <vector>
 
 HCLASS(FrameBuffer) : public Object
 {
@@ -19,15 +21,16 @@ public:
 	
 	const bool hasColorBuffer = false;
 	const bool hasDepthBuffer = false;
-	const bool hasStencilBuffer = false;
 	
 	const bool fitWindow = false;
 	
-	Vector2 pxSize;
+	const bool hdr = false;
 	
-	FrameBuffer (bool hasColorBuffer, bool hasDepthBuffer, bool fitWindow);
-	FrameBuffer (bool hasColorBuffer, bool hasDepthBuffer, Vector2 size);
-	FrameBuffer (int id, bool hasColorBuffer = true, bool hasDepthBuffer = true);
+	IVector2 pxSize;
+	
+	FrameBuffer (bool hasColorBuffer, bool hasDepthBuffer, bool fitWindow, bool hdr = false);
+	FrameBuffer (bool hasColorBuffer, bool hasDepthBuffer, IVector2 size, bool hdr = false);
+	explicit FrameBuffer (int id, bool hasColorBuffer = true, bool hasDepthBuffer = true, bool hdr = false);
 	~FrameBuffer();
 	
 	
@@ -38,11 +41,16 @@ public:
 	void BindDraw ();
 	void BindRead ();
 	void Use ();
-	void Generate (Vector2 size);
+	void Generate (IVector2 size);
 	void Delete ();
+	void Clear (bool clearColorBuffer = true, bool clearDepthBuffer = true);
+	void Clear (Color color, bool clearColorBuffer = true, bool clearDepthBuffer = true);
 	
-	static void Copy (HFrameBuffer fba, HFrameBuffer fbb);
+	static void Copy (HFrameBuffer fba, HFrameBuffer fbb, bool smooth = false);
 };
 
 extern HFrameBuffer defaultFrameBuffer;
 extern HFrameBuffer currentFrameBuffer;
+
+
+extern std::vector<HFrameBuffer> frameBuffers;

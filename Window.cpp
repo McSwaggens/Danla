@@ -3,7 +3,7 @@
 #include "Danla.h"
 #include <math.h>
 #include <stdio.h>
-
+#include "FrameBuffer.h"
 
 #define gWindow (GLFWwindow*)pWindow
 
@@ -16,6 +16,9 @@ Window::Window (int width, int height, String title)
 	
 	width = videoMode->width;
 	height = videoMode->height;
+	
+	glfwWindowHint(GLFW_DECORATED, 1);
+	glfwWindowHint(GLFW_SAMPLES, 0);
 	
 	GLFWwindow* windowPointer = glfwCreateWindow (width, height, title.c_str(), 0, NULL);
 	
@@ -42,14 +45,14 @@ void Window::Enable ()
 	glfwFocusWindow(gWindow); // Removing this random glfw command will crash the engine... Don't ask why, the computer gods have deemed me not worthy of working code.
 }
 
-void Window::SetPosition (int x, int y)
+void Window::SetPosition (IVector2 position)
 {
-	glfwSetWindowPos(gWindow, x, y);
+	glfwSetWindowPos(gWindow, position.x, position.y);
 }
 
-void Window::SetSize (int width, int height)
+void Window::SetSize (IVector2 size)
 {
-	glfwSetWindowSize(gWindow, width, height);
+	glfwSetWindowSize(gWindow, size.x, size.y);
 }
 
 void Window::SetTitle (String title)
@@ -69,11 +72,11 @@ void Window::SetVSync (bool enabled)
 	}
 }
 
-Vector2 Window::GetSize ()
+IVector2 Window::GetSize ()
 {
 	int width, height;
 	glfwGetWindowSize(gWindow, &width, &height);
-	return Vector2(width, height);
+	return IVector2(width, height);
 }
 
 void Window::SetVisible (bool shown)
@@ -93,24 +96,34 @@ float lastSwapTime = 0.0f;
 
 void Window::SwapBuffers ()
 {
-//  // Has really annoying stuttering
+	
+//	// Has really annoying stuttering
 //	// You shouldn't use this code.
 //	float _time;
 //	do
 //	{
 //		_time = GetTime();
 //	} while (_time - lastSwapTime < targetFrameTime);
-//
-//
 //	lastSwapTime = _time;
+	
 	glfwSwapBuffers (gWindow);
 }
 
 void Window::PollEvents ()
 {
+	IVector2 resolutionCopy = GetSize();
+	
 	glfwPollEvents ();
 	
-	Vector2 resolution = GetSize ();
+	IVector2 resolution = GetSize ();
+	
+	if ((resolution.x != 0 && resolution.y != 0) && (resolution.x != resolutionCopy.x || resolution.y != resolutionCopy.y))
+	{
+		for (auto frameBuffer : frameBuffers)
+		{
+			frameBuffer->OnWindowSizeChanged(this);
+		}
+	}
 	
 	glViewport(0, 0, resolution.x, resolution.y);
 	
@@ -118,4 +131,13 @@ void Window::PollEvents ()
 	{
 		ShutdownDanla ();
 	}
+}
+
+void* Window::GetPWindow ()
+{
+	return pWindow;
+}
+
+bool Window::IsFocused ()
+{
 }

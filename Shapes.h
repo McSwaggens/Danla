@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "Danla.h"
 #include "AttributeBatch.h"
 
 namespace Shapes
@@ -15,5 +14,7 @@ namespace Shapes
 	extern HAttributeBatch positionedQuad;
 	void Initialize ();
 }
+
+extern int drawCalls;
 
 void DrawShape (HAttributeBatch shape);

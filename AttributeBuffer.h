@@ -39,6 +39,7 @@ public:
 	void SetUsage (AttributeUsage usage);
 	/// Uploads an array of data into the attribute buffer.
 	/// @param data The array of data you want to upload.
+	void UploadR (std::vector<T>& data);
 	void Upload (std::vector<T> data);
 	void Enable ();
 	void Disable ();

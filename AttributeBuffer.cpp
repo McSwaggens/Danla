@@ -34,7 +34,7 @@ void AttributeBuffer<T>::SetUsage (AttributeUsage usage)
 }
 
 template<typename T>
-void AttributeBuffer<T>::Upload (std::vector<T> data)
+void AttributeBuffer<T>::UploadR (std::vector<T>& data)
 {
 	elements = data.size();
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -66,6 +66,12 @@ template<typename T>
 AttributeBuffer<T>::AttributeBuffer (int attributeNumber, AttributeUsage usage, std::vector<T> data) : AttributeBuffer (attributeNumber, usage)
 {
 	Upload(data);
+}
+
+template<typename T>
+void AttributeBuffer<T>::Upload (std::vector<T> data)
+{
+	UploadR(data);
 }
 
 template class AttributeBuffer<Vector2>;
