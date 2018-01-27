@@ -14,7 +14,7 @@ enum class AttributeUsage : unsigned int
 HCLASS (AttributeBufferBase) : public Object
 {
 public:
-	int attributeNumber;
+	unsigned int attributeNumber;
 	int elements = 0;
 	
 	virtual void Enable () = 0;
@@ -25,16 +25,16 @@ HCLASST(template<typename T>, T, AttributeBuffer) : public AttributeBufferBase
 protected:
 	
 	unsigned int buffer;
-	int dataSize; // float : 4, vec4 : 16
-	int dataElements; // float : 1, vec2 : 2, vec4 : 4 etc...
+	int dataSize;		// float : 4, vec4 : 16
+	int dataElements;	// float : 1, vec2 : 2, vec4 : 4 etc...
+	int attributeSpace;	// float : 1, vec4 : 1, mat2 : 2, mat4 : 4
 	AttributeUsage usage;
-	int divisor;
+	unsigned int divisor;
+	bool constant;
 public:
 	
-	
-	
-	AttributeBuffer (int attributeNumber, AttributeUsage usage);
-	AttributeBuffer (int attributeNumber, AttributeUsage usage, std::vector<T> data);
+	AttributeBuffer (unsigned int attributeNumber, AttributeUsage usage, bool constant, int attributeTypeElements = 4);
+	AttributeBuffer (unsigned int attributeNumber, AttributeUsage usage, bool constant, std::vector<T> data);
 	
 	void SetUsage (AttributeUsage usage);
 	/// Uploads an array of data into the attribute buffer.

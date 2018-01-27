@@ -42,12 +42,13 @@ void AttributeBatch::Enable ()
 		
 		activeAttributeBatch = this;
 		
-		bool newEnabledAttributes[10] = { false };
+		bool oldEnabledAttributes[10] = { false };
+		std::copy(std::begin(enabledAttributes), std::end(enabledAttributes), std::begin(oldEnabledAttributes));
+		memset(enabledAttributes, 0, sizeof(enabledAttributes));
 		
 		for (int i = 0; i < buffers.size(); i++)
 		{
 			buffers[i]->Enable();
-			newEnabledAttributes[buffers[i]->attributeNumber] = true;
 		}
 		
 		enabled = true;
@@ -56,13 +57,11 @@ void AttributeBatch::Enable ()
 		// We don't want the GPU to be fetching data it isn't even using...
 		for (int i = 0; i < 10; i++)
 		{
-			if (enabledAttributes[i] && !newEnabledAttributes[i])
+			if (!enabledAttributes[i] && oldEnabledAttributes[i])
 			{
 				glDisableVertexAttribArray(i);
 			}
 		}
-		
-		std::copy(std::begin(newEnabledAttributes), std::end(newEnabledAttributes), std::begin(enabledAttributes));
 	}
 }
 

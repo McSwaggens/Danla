@@ -6,7 +6,9 @@
 
 
 extern float time;
-extern float delta;
+extern float frameDelta;
+extern float logicDelta;
+extern unsigned int tickRate;
 
 /// @use Test!
 float GetTime ();

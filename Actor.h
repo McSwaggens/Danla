@@ -8,6 +8,7 @@
 _HCLASS(Actor);
 
 #include "Entity.h"
+#include "Camera.h"
 #include "World.h"
 #include "Transform.h"
 
@@ -27,7 +28,6 @@ private:
 public:
 	
 	Transform transform;
-	
 	HWorld world;
 	
 	Actor ();

@@ -7,6 +7,7 @@
 #include "OpenGL.h"
 
 HAttributeBuffer<Vector2> positionBuffer;
+HAttributeBuffer<Matrix4> matrixBuffer;
 
 HAttributeBuffer<Vector2> triangleVertices;
 HAttributeBuffer<Vector2> triangleUV;
@@ -14,17 +15,20 @@ HAttributeBuffer<Vector2> triangleUV;
 HAttributeBuffer<Vector2> quadVertices;
 HAttributeBuffer<Vector2> quadUV;
 
+
 HAttributeBatch Shapes::quad;
 HAttributeBatch Shapes::triangle;
 
 HAttributeBatch Shapes::positionedQuad;
 HAttributeBatch Shapes::positionedTriangle;
 
+HAttributeBatch Shapes::matrixQuad;
+
 int drawCalls = 0;
 
 void Shapes::Initialize ()
 {
-	triangleVertices = new AttributeBuffer<Vector2> (0, AttributeUsage::PerVertex,
+	triangleVertices = new AttributeBuffer<Vector2> (0, AttributeUsage::PerVertex, true,
 		{
 			   Vector2 (-1, -1),
 			   Vector2 (1, -1),
@@ -32,7 +36,7 @@ void Shapes::Initialize ()
 		}
 	);
 	
-	triangleUV = new AttributeBuffer<Vector2>(1, AttributeUsage::PerVertex,
+	triangleUV = new AttributeBuffer<Vector2>(1, AttributeUsage::PerVertex, true,
 		{
 				Vector2(0.0f, 0.0f),
 				Vector2(1.0f, 0.0f),
@@ -40,7 +44,7 @@ void Shapes::Initialize ()
 		}
 	);
 	
-	quadVertices = new AttributeBuffer<Vector2>(0, AttributeUsage::PerVertex,
+	quadVertices = new AttributeBuffer<Vector2>(0, AttributeUsage::PerVertex, true,
 		{
 			  Vector2 (-1, -1),
 			  Vector2 (1, -1),
@@ -51,7 +55,7 @@ void Shapes::Initialize ()
 		}
 	);
 	
-	quadUV = new AttributeBuffer<Vector2>(1, AttributeUsage::PerVertex,
+	quadUV = new AttributeBuffer<Vector2>(1, AttributeUsage::PerVertex, true,
 		{
 				Vector2 (0, 0),
 				Vector2 (1, 0),
@@ -62,13 +66,17 @@ void Shapes::Initialize ()
 		}
 	);
 	
-	positionBuffer = new AttributeBuffer<Vector2>(2, AttributeUsage::PerDraw);
+	
+	positionBuffer = new AttributeBuffer<Vector2>(2, AttributeUsage::PerDraw, true);
+	matrixBuffer = new AttributeBuffer<Matrix4>(2, AttributeUsage::PerDraw, true);
 	
 	quad = new AttributeBatch({ quadVertices, quadUV });
 	triangle = new AttributeBatch({ triangleVertices, triangleUV });
 	
 	positionedQuad = new AttributeBatch({ quadVertices, quadUV, positionBuffer });
 	positionedTriangle = new AttributeBatch({ triangleVertices, triangleUV, positionBuffer });
+	
+	matrixQuad = new AttributeBatch({ quadVertices, quadUV, matrixBuffer });
 }
 
 void DrawShape (HAttributeBatch shape)
@@ -84,7 +92,7 @@ void DrawShape (HAttributeBatch shape)
 	
 	if (usePositionBuffer)
 	{
-		drawCount = positionBuffer->elements;
+		drawCount = shape->buffers[2]->elements;
 	}
 	
 	glDrawArraysInstanced(GL_TRIANGLES, 0, vertexBuffer->elements, drawCount);

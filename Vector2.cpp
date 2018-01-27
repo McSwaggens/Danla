@@ -21,7 +21,8 @@ void Vector2::UploadUniform (UniformID id)
 	glUniform2f(id, x, y);
 }
 
-// void Vector2::UploadUniform (UniformID id)
-// {
-// 	glUniform2f(id, x, y);
-// }
+Vector2::Vector2 (IVector2 iv2)
+{
+	x = iv2.x;
+	y = iv2.y;
+}

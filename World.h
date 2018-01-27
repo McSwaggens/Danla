@@ -10,6 +10,7 @@ _HCLASS(World);
 #include "Actor.h"
 #include "SafeList.h"
 #include "RenderGroup.h"
+#include "Camera.h"
 
 
 /*!
@@ -21,6 +22,8 @@ HCLASS(World) : public Object
 private:
 
 public:
+	
+	HCamera camera;
 	SafeList<HActor> actors;
 	std::vector<HRenderGroupBase> renderGroups;
 	

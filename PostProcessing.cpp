@@ -12,9 +12,14 @@ void PostProcess (HFrameBuffer alphaBuffer, HFrameBuffer betaBuffer, HPostProces
 	alphaBuffer->BindRead();
 	betaBuffer->BindDraw();
 	
-	betaBuffer->Clear();
+	betaBuffer->Clear(Color(0));
 	
 	material->u_InputTexture = alphaBuffer->colorBuffer;
+	
+	if (alphaBuffer->hasDepthBuffer)
+	{
+		material->u_DepthTexture = alphaBuffer->depthBuffer;
+	}
 	
 	material->Enable();
 	

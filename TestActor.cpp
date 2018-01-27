@@ -3,8 +3,12 @@
 //
 
 #include "TestActor.h"
+#include <cstring>
+#include "OpenGL.h"
+#include "Input.h"
 
 int TestActor::count = 0;
+int TestActor::rendered = 0;
 
 TestActor::TestActor ()
 {
@@ -12,23 +16,36 @@ TestActor::TestActor ()
 
 void TestActor::Tick ()
 {
-	float c = ((float)(PIx2 / count) * m) + time;
-	transform.position = Vector2(sin(c), cos(c));
+
+	
+//	float change = IsKeyDown(Keys::Q) ? 1.0f : IsKeyDown(Keys::E) ? -1.0f : 0.0f;
+//	transform.rotation += change * logicDelta;
 }
 
 void TestActor::Render ()
 {
-	renderGroup->Add(transform.position);
+	if (!activeCamera->IsCulled(transform))
+	{
+		renderGroup->Add(transform.GetMatrix());
+		rendered++;
+	}
 }
 
 void TestActor::OnCreated ()
 {
-	static RenderGroup<Vector2>* staticRenderGroup = new RenderGroup<Vector2>(Shapes::positionedQuad, 2, unitMaterial, world, 1000);
+	static RenderGroup<Matrix4>* staticRenderGroup = new RenderGroup<Matrix4>(Shapes::matrixQuad, 2, unitMaterial, world, 1000);
 	renderGroup = staticRenderGroup;
 	m = count;
 	count++;
+	
+	transform.position = (Vector2((sin(m) * m) / (5.0f), (cos(m) * m) / 5.0f));
 }
 
 void TestActor::OnDestroyed ()
 {
+}
+
+TestActor::TestActor (Vector2 position)
+{
+
 }

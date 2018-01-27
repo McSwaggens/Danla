@@ -12,6 +12,7 @@ namespace Shapes
 	extern HAttributeBatch triangle;
 	extern HAttributeBatch positionedTriangle;
 	extern HAttributeBatch positionedQuad;
+	extern HAttributeBatch matrixQuad;
 	void Initialize ();
 }
 

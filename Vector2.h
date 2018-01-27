@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Vector.h"
+#include "Uniform.h"
+#include "IVector2.h"
 
-class Vector2 : public Vector
+class Vector2 : public Uniform
 {
 public:
 	float x;
@@ -11,6 +12,7 @@ public:
 	Vector2 ();
 	Vector2 (float x);
 	Vector2 (float x, float y);
+	Vector2 (IVector2 iv2);
 	
 	void UploadUniform (UniformID id);
 	

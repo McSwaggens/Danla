@@ -67,9 +67,9 @@ void FrameBuffer::Delete ()
 		{
 			colorBuffer.Delete();
 		}
-		if (depthStencilBuffer)
+		if (depthBuffer)
 		{
-			depthStencilBuffer.Delete();
+			depthBuffer.Delete();
 		}
 	}
 }
@@ -93,9 +93,9 @@ void FrameBuffer::Generate (IVector2 size)
 			colorBuffer.Delete();
 		}
 		
-		if (hasDepthBuffer && depthStencilBuffer.IsValid())
+		if (hasDepthBuffer && depthBuffer.IsValid())
 		{
-			depthStencilBuffer.Delete();
+			depthBuffer.Delete();
 		}
 		
 		
@@ -104,8 +104,8 @@ void FrameBuffer::Generate (IVector2 size)
 			colorBuffer = new Texture();
 			colorBuffer->Bind(0);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, hdr ? GL_FLOAT : GL_BYTE, 0);
-			colorBuffer->SetInterpolationNearest();
-			colorBuffer->ClampMirror(true, true);
+			colorBuffer->SetInterpolationLinear();
+			colorBuffer->EdgeClamp(true, true);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer->id, 0);
@@ -113,21 +113,15 @@ void FrameBuffer::Generate (IVector2 size)
 		
 		if (hasDepthBuffer)
 		{
-			depthStencilBuffer = new RenderBufferTexture();
+			depthBuffer = new Texture();
+			depthBuffer->Bind(0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_STENCIL, size.x, size.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
+			depthBuffer->SetInterpolationNearest();
+			depthBuffer->ClampMirror(true, true);
+			glGenerateMipmap(GL_TEXTURE_2D);
 			
-			depthStencilBuffer->Bind();
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-			
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilBuffer->id);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthBuffer->id, 0);
 		}
-		
-		// Create Color Buffer
-		
-		
-		
-		// Create depth and stencil buffer
-		
-		
 		
 		int status = glCheckFramebufferStatus (GL_FRAMEBUFFER);
 		
@@ -170,7 +164,7 @@ FrameBuffer::~FrameBuffer ()
 void FrameBuffer::BindDraw ()
 {
 	BindTo(GL_DRAW_FRAMEBUFFER);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0 | GL_DEPTH_ATTACHMENT);
 	
 	if (hasDepthBuffer)
 	{
@@ -183,7 +177,7 @@ void FrameBuffer::BindDraw ()
 		glDisable(GL_STENCIL_TEST);
 	}
 	
-	glViewport(0, 0, (int)pxSize.x, (int)pxSize.y);
+	glViewport(0, 0, pxSize.x, pxSize.y);
 }
 
 void FrameBuffer::BindRead ()
@@ -191,19 +185,54 @@ void FrameBuffer::BindRead ()
 	BindTo(GL_READ_FRAMEBUFFER);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	colorBuffer->Bind(0);
+	
+	glViewport(0, 0, pxSize.x, pxSize.y);
 }
 
-void FrameBuffer::Copy (HFrameBuffer fba, HFrameBuffer fbb, bool smooth)
+void FrameBuffer::Copy (HFrameBuffer fba, HFrameBuffer fbb, bool smooth, bool depth)
 {
 	fba->BindRead();
 	fbb->BindDraw();
 	
 	glBlitFramebuffer
 	(
-			0, 0, static_cast<GLint>(fba->pxSize.x), static_cast<GLint>(fba->pxSize.y),
-			0, 0, static_cast<GLint>(fbb->pxSize.x), static_cast<GLint>(fbb->pxSize.y),
+			0, 0, fba->pxSize.x, fba->pxSize.y,
+			0, 0, fbb->pxSize.x, fbb->pxSize.y,
 			GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST
 	);
+	
+	if (depth)
+	{
+		glBlitFramebuffer
+		(
+				0, 0, fba->pxSize.x, fba->pxSize.y,
+				0, 0, fbb->pxSize.x, fbb->pxSize.y,
+				GL_DEPTH_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST
+		);
+	}
+}
+
+void FrameBuffer::Copy (HFrameBuffer fba, IVector2 fbaSize, HFrameBuffer fbb, bool smooth, bool depth)
+{
+	fba->BindRead();
+	fbb->BindDraw();
+	
+	glBlitFramebuffer
+	(
+			0, 0, fbaSize.x, fbaSize.y,
+			0, 0, fbb->pxSize.x, fbb->pxSize.y,
+			GL_COLOR_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST
+	);
+	
+	if (depth)
+	{
+		glBlitFramebuffer
+		(
+				0, 0, fbaSize.x, fbaSize.y,
+				0, 0, fbb->pxSize.x, fbb->pxSize.y,
+				GL_DEPTH_BUFFER_BIT, smooth ? GL_LINEAR : GL_NEAREST
+		);
+	}
 }
 
 void FrameBuffer::Clear (Color color, bool clearColorBuffer, bool clearDepthBuffer)
@@ -225,5 +254,11 @@ void FrameBuffer::Clear (bool clearColorBuffer, bool clearDepthBuffer)
 	}
 	
 	glClear(mask);
+}
+
+void FrameBuffer::Viewport (IVector2 resolution)
+{
+	BindTo(GL_FRAMEBUFFER);
+	glViewport(0, 0, resolution.x, resolution.y);
 }
 

@@ -4,19 +4,20 @@
 
 #pragma once
 
+static const int mouseKeyCodes[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2 };
 
-enum class MouseKeys
+enum class MouseKeys : int
 {
-	D1        = 0,
-	D2        = 1,
-	D3        = 2,
-	D4        = 3,
-	D5        = 4,
-	D6        = 5,
-	D7        = 6,
-	D8        = 7,
-	Last      = 8,
-	Left      = 1,
-	Right     = 2,
-	Middle    = 3,
+	D1    		,
+	D2    		,
+	D3    		,
+	D4    		,
+	D5    		,
+	D6    		,
+	D7    		,
+	D8    		,
+	Last  		,
+	Left  		,
+	Right 		,
+	Middle		,
 };

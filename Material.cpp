@@ -1,6 +1,7 @@
 #include "Material.h"
 #include "OpenGL.h"
-#include "UFloat.h"
+#include "Time.h"
+#include "Camera.h"
 #include <stdio.h>
 
 UniformCell::UniformCell ()
@@ -40,7 +41,7 @@ HTexture CreateUniformTexture (String name, TextureUnit textureUnit)
 {
 	HTexture texture = new Texture ();
 	
-	UniformTextureCell* uCell = new UniformTextureCell(texture, name, textureUnit);
+	UniformTextureCell* uCell = new UniformTextureCell(&texture, name, textureUnit);
 	
 	uniformCellStack.push_back (uCell);
 	
@@ -51,14 +52,12 @@ Material::Material ()
 {
 }
 
-Material::Material (HShader shader)
-{
-	this->shader = shader;
-}
-
 void Material::Initialize (HShader shader)
 {
+	this->shader = shader;
+	
 	staticTime = shader->GetUniform("time");
+	staticPVMatrix = shader->GetUniform("pvMatrix");
 	
 	for (auto uCell : uniformCells)
 	{
@@ -78,6 +77,11 @@ void Material::Enable ()
 		glUniform1f(staticTime, time);
 	}
 	
+	if (staticPVMatrix != -1)
+	{
+		glUniformMatrix4fv(staticPVMatrix, 1, GL_FALSE, activeCamera->GetMatrixPointer());
+	}
+	
 	for (auto uCell : uniformCells)
 	{
 		uCell->Upload();
@@ -89,7 +93,7 @@ Material::~Material ()
 	uniformCells.clear(); // Make sure the pointers are cleared.
 }
 
-UniformTextureCell::UniformTextureCell (HTexture texture, String name, TextureUnit textureUnit)
+UniformTextureCell::UniformTextureCell (HTexture* texture, String name, TextureUnit textureUnit)
 {
 	this->name = name;
 	this->texture = texture;
@@ -98,5 +102,5 @@ UniformTextureCell::UniformTextureCell (HTexture texture, String name, TextureUn
 
 void UniformTextureCell::Upload ()
 {
-	texture->UploadUniformTexture(id, textureUnit);
+	(*texture)->UploadUniformTexture(id, textureUnit);
 }

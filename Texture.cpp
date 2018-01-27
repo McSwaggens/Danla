@@ -29,6 +29,7 @@ Texture::~Texture ()
 
 void Texture::Delete ()
 {
+	//printf ("Called on id %i\n", id);
 	glDeleteTextures(1, &id);
 	id = 0;
 }
@@ -40,14 +41,14 @@ void Texture::UploadUniform (UniformID id)
 
 void Texture::Bind (TextureUnit textureUnit)
 {
-	glActiveTexture(textureUnit.GetGLTextureUnit());
+	glActiveTexture(GL_TEXTURE0 + textureUnit.unit);
 	glBindTexture(GL_TEXTURE_2D, id);
 }
 
 void Texture::UploadUniformTexture (UniformID _id, TextureUnit textureUnit)
 {
-	glUniform1i(_id, textureUnit.unit);
 	Bind(textureUnit);
+	glUniform1i(_id, textureUnit.unit);
 }
 
 void Texture::ClampMirror (bool x, bool y)
@@ -60,6 +61,19 @@ void Texture::ClampMirror (bool x, bool y)
 	if (y)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
+	}
+}
+
+void Texture::EdgeClamp (bool x, bool y)
+{
+	if (x)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	}
+	
+	if (y)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 }
 
@@ -103,3 +117,23 @@ void Texture::SetInterpolationNearest ()
 }
 
 
+HTexture LoadTexture (String fileName)
+{
+	unsigned int textureID = SOIL_load_OGL_texture(fileName.c_str(), SOIL_LOAD_AUTO, 0, SOIL_FLAG_INVERT_Y);
+	
+	if (!textureID)
+	{
+		printf ("Failed to load texture \"%s\".", fileName.c_str());
+		return HTexture();
+	}
+	
+	HTexture texture = new Texture (textureID);
+	glBindTexture(GL_TEXTURE_2D, texture->id);
+	
+	texture->MirroredRepeat(true, true);
+	texture->SetInterpolationNearest();
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	
+	return texture;
+}

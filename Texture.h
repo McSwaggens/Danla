@@ -28,16 +28,17 @@ public:
 	void UploadUniformTexture (UniformID id, TextureUnit textureUnit);
 	void Bind (TextureUnit textureUnit);
 	void ClampMirror (bool x = true, bool y = true);
+	void EdgeClamp (bool x = true, bool y = true);
 	void MirroredRepeat (bool x = true, bool y = true);
 	void Repeat (bool x = true, bool y = true);
 	
 	/**
-	 * Pixelated then scaling.
+	 * Blurred when scaling.
 	 */
 	void SetInterpolationLinear();
 	
 	/**
-	 * Blurred when scaling.
+	 * Pixelated when scaling.
 	 */
 	void SetInterpolationNearest ();
 };

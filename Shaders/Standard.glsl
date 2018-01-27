@@ -5,6 +5,8 @@
 		Feel free to add more usefull shader functions.
 */
 
+#define PI 3.1415926535897932384626433832795
+
 vec4 GreyScale (in vec4 color)
 {
 	float avg = (color.r + color.g + color.b) / 3;

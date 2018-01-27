@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "Vector.h"
 
-class IVector2 : public Vector
+#include "Uniform.h"
+
+class IVector2 : public Uniform
 {
 public:
 	int x;

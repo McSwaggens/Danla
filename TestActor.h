@@ -9,12 +9,14 @@
 HCLASS(TestActor) : public Actor
 {
 public:
-	HRenderGroup<Vector2> renderGroup;
+	HRenderGroup<Matrix4> renderGroup;
 	
 	static int count;
+	static int rendered;
 	
 	float m = 0;
 	TestActor ();
+	TestActor (Vector2 position);
 	
 	void Render () override;
 	

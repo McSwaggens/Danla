@@ -18,7 +18,9 @@ float lastTime;
 // Global
 
 float time = 0.0f;
-float delta = 0.0f;
+float frameDelta = 0.0f;
+float logicDelta = 0.0f;
+unsigned int tickRate = 60;
 
 #define WAIT_UNTIL_FRESH_TIME false
 
@@ -51,7 +53,7 @@ void PollTimeFull ()
 	
 	time = TicksToSeconds(ticks - startTicks);
 	
-	delta = time - lastTime;
+	frameDelta = time - lastTime;
 	
 	lastTicks = ticks;
 }

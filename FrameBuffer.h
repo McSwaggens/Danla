@@ -17,7 +17,7 @@ public:
 	int id = -1;
 	
 	HTexture colorBuffer;
-	HRenderBufferTexture depthStencilBuffer;
+	HTexture depthBuffer;
 	
 	const bool hasColorBuffer = false;
 	const bool hasDepthBuffer = false;
@@ -43,10 +43,12 @@ public:
 	void Use ();
 	void Generate (IVector2 size);
 	void Delete ();
+	void Viewport (IVector2 resolution);
 	void Clear (bool clearColorBuffer = true, bool clearDepthBuffer = true);
 	void Clear (Color color, bool clearColorBuffer = true, bool clearDepthBuffer = true);
 	
-	static void Copy (HFrameBuffer fba, HFrameBuffer fbb, bool smooth = false);
+	static void Copy (HFrameBuffer fba, HFrameBuffer fbb, bool smooth = false, bool depth = false);
+	static void Copy (HFrameBuffer fba, IVector2 fbaSize, HFrameBuffer fbb, bool smooth = false, bool depth = false);
 };
 
 extern HFrameBuffer defaultFrameBuffer;

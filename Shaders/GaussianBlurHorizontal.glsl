@@ -1,5 +1,4 @@
 #version 440 core
-#define PI 3.1415926535897932384626433832795
 
 #Vertex
 
@@ -21,7 +20,7 @@ void main ()
 
 	float pixelSize = 1 / txSize.x;
 
-	for (int i = -5; i < 5; i++)
+	for (int i = -5; i <= 5; i++)
 	{
 		gaussianBlurTexCoords[i + 5] = uv + vec2(pixelSize * i, 0.0);
 	}

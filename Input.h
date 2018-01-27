@@ -23,4 +23,9 @@ bool IsKeyUp (Keys key);
 bool IsKeyPressed (Keys key);
 bool IsKeyReleased (Keys key);
 
+bool IsMouseKeyDown (MouseKeys mouseKey);
+bool IsMouseKeyUp (MouseKeys mouseKey);
+bool IsMouseKeyPressed (MouseKeys mouseKey);
+bool IsMouseKeyReleased (MouseKeys mouseKey);
 
+float GetScroll ();

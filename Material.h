@@ -26,11 +26,11 @@ public:
 class UniformTextureCell : public UniformCell
 {
 public:
-	HTexture texture;
+	HTexture* texture;
 	TextureUnit textureUnit;
 	
 	
-	UniformTextureCell (HTexture texture, String name, TextureUnit textureUnit);
+	UniformTextureCell (HTexture* texture, String name, TextureUnit textureUnit);
 	
 	void Upload () override;
 };
@@ -44,11 +44,11 @@ public:
 	// Statics
 	
 	UniformID staticTime;
+	UniformID staticPVMatrix;
 	
 	// Statics
 	
 	Material ();
-	explicit Material (HShader shader);
 	
 	void Enable ();
 	void Initialize (HShader shader);
@@ -88,7 +88,7 @@ HTexture CreateUniformTexture (String name, TextureUnit textureUnit);
 
 std::vector<UniformCell*> SwapUniformCellStack ();
 
-#define MATERIALO(m, parent) HCLASS(m) : public parent { public: inline m (HShader shader) : parent(shader) { this->uniformCells = SwapUniformCellStack(); Initialize(shader); }
+#define MATERIALO(m, parent) HCLASS(m) : public parent { public: inline m () {} inline explicit m (HShader shader) { this->uniformCells = SwapUniformCellStack(); Initialize(shader); }
 #define MATERIAL(m) MATERIALO(m, Material)
 #define UNIFORM(type, name) type name = CreateUniform<type> (#name, name)
 #define TEXTURE(name, texUnit) HTexture name = CreateUniformTexture (#name, TextureUnit(texUnit))

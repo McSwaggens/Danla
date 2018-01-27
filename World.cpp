@@ -66,6 +66,8 @@ void World::DispatchRenderGroups ()
 
 void World::Render ()
 {
+	camera->PreComputeMatrix();
+	
 	std::vector<HActor>& _actors = actors.values;
 	for (int i = 0; i < _actors.size(); i++)
 	{
@@ -76,6 +78,7 @@ void World::Render ()
 		}
 	}
 	
+	camera->RenderWorld(this);
 }
 
 void AddRenderGroupToWorld (HRenderGroupBase renderGroup, HWorld world)

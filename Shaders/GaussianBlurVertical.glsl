@@ -1,5 +1,4 @@
 #version 440 core
-#define PI 3.1415926535897932384626433832795
 
 #Vertex
 
@@ -21,7 +20,7 @@ void main ()
 
 	float pixelSize = 1 / txSize.y;
 
-	for (int i = -5; i < 5; i++)
+	for (int i = -5; i <= 5; i++)
 	{
 		gaussianBlurTexCoords[i + 5] = uv + vec2(0.0, pixelSize * i);
 	}
@@ -42,17 +41,17 @@ void main ()
 {
 	vec4 sum = vec4(0);
 
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[0]) * 0.090743;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[1]) * 0.090842;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[2]) * 0.09092;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[3]) * 0.090976;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[4]) * 0.091009;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[5]) * 0.09102;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[6]) * 0.091009;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[7]) * 0.090976;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[8]) * 0.09092;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[9]) * 0.090842;
-	sum += texture(u_InputTexture, gaussianBlurTexCoords[10]) * 0.090743;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[0]) * 0.090743;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[1]) * 0.090842;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[2]) * 0.09092;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[3]) * 0.090976;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[4]) * 0.091009;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[5]) * 0.09102;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[6]) * 0.091009;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[7]) * 0.090976;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[8]) * 0.09092;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[9]) * 0.090842;
+	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[10]) * 0.090743;
 
 	color = sum;
 }

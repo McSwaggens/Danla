@@ -74,7 +74,7 @@ void RenderGroup<T>::Render ()
 {
 	material->Enable();
 	attributeBatch->Enable();
-	positionAttributeBuffer->Upload(positionBuffer);
+	positionAttributeBuffer->UploadR(positionBuffer);
 	DrawShape(attributeBatch);
 	positionBuffer.clear();
 }

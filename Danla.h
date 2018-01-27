@@ -17,7 +17,9 @@ extern HWindow window;
 extern HAttributeBuffer<Vector2> positionBuffer;
 extern HWorld world;
 
-class UnitMaterial;using HUnitMaterial=Handle<UnitMaterial>;;class UnitMaterial:public Material{public:inline UnitMaterial(HShader shader):Material(shader){this->uniformCells=SwapUniformCellStack();Initialize(shader);}};
+MATERIAL(UnitMaterial)
+	TEXTURE(u_Texture, 0);
+END_MATERIAL;
 
 extern HUnitMaterial unitMaterial;
 

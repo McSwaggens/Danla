@@ -9,22 +9,23 @@ GLFWwindow* glfwWindow;
 
 class InputCache
 {
-	bool pressMap[(sizeof(keyCodes)/4)-1] = { 0 };
 public:
-	
-	inline bool& operator [] (std::size_t index)
-	{
-		return pressMap[index];
-	}
+	bool keyboard[(sizeof(keyCodes)/4)-1] = { 0 };
+	bool mouse[(sizeof(mouseKeyCodes)/4)-1] = { 0 };
 };
 
-InputCache currentKeyboardMap;
-InputCache previousKeyboardMap;
+InputCache currentInputCache;
+InputCache previousInputCache;
+
+double glfwMouseScrollCurrentX = 0.0f;
+double glfwMouseScrollCurrentY = 0.0f;
+
+float scroll = 0.0f;
 
 void TickInputSystem ()
 {
-	previousKeyboardMap = currentKeyboardMap;
-	currentKeyboardMap = InputCache();
+	previousInputCache = currentInputCache;
+	currentInputCache = InputCache();
 	
 	for (int i = 0; i < (int)Keys::Menu; i++)
 	{
@@ -32,8 +33,22 @@ void TickInputSystem ()
 		
 		bool pressed = glfwGetKey(glfwWindow, keyCode) == GLFW_PRESS;
 		
-		currentKeyboardMap[i] = pressed;
+		currentInputCache.keyboard[i] = pressed;
 	}
+	
+	for (int i = 0; i < (int)MouseKeys::Middle; i++)
+	{
+		int keyCode = mouseKeyCodes[i];
+		
+		bool pressed = glfwGetMouseButton(glfwWindow, keyCode) == GLFW_PRESS;
+		
+		currentInputCache.mouse[i] = pressed;
+	}
+	
+	scroll = (float)glfwMouseScrollCurrentY;
+	
+	glfwMouseScrollCurrentY = 0.0f;
+	glfwMouseScrollCurrentX = 0.0f;
 }
 
 void UseWindowForInput (HWindow window)
@@ -43,20 +58,45 @@ void UseWindowForInput (HWindow window)
 
 bool IsKeyDown (Keys key)
 {
-	return currentKeyboardMap[(int)key];
+	return currentInputCache.keyboard[(int)key];
 }
 
 bool IsKeyUp (Keys key)
 {
-	return !currentKeyboardMap[(int)key];
+	return !currentInputCache.keyboard[(int)key];
 }
 
 bool IsKeyPressed (Keys key)
 {
-	return currentKeyboardMap[(int)key] && !previousKeyboardMap[(int)key];
+	return currentInputCache.keyboard[(int)key] && !previousInputCache.keyboard[(int)key];
 }
 
 bool IsKeyReleased (Keys key)
 {
-	return !currentKeyboardMap[(int)key] && previousKeyboardMap[(int)key];
+	return !currentInputCache.keyboard[(int)key] && previousInputCache.keyboard[(int)key];
+}
+
+float GetScroll ()
+{
+	return scroll;
+}
+
+bool IsMouseKeyDown (MouseKeys mouseKey)
+{
+	return currentInputCache.mouse[(int)mouseKey];
+}
+
+bool IsMouseKeyUp (MouseKeys mouseKey)
+{
+	return !currentInputCache.mouse[(int)mouseKey];
+}
+
+bool IsMouseKeyPressed (MouseKeys mouseKey)
+{
+	return currentInputCache.mouse[(int)mouseKey] && !previousInputCache.mouse[(int)mouseKey];
+}
+
+bool IsMouseKeyReleased (MouseKeys mouseKey)
+{
+	return !currentInputCache.mouse[(int)mouseKey] && previousInputCache.mouse[(int)mouseKey];
 }
