@@ -9,19 +9,19 @@
 
 void PostProcess (HFrameBuffer alphaBuffer, HFrameBuffer betaBuffer, HPostProcessorMaterial material)
 {
-	alphaBuffer->BindRead();
-	betaBuffer->BindDraw();
+//	alphaBuffer->BindRead();
+//	betaBuffer->BindDraw();
 	
-	betaBuffer->Clear(Color(0));
+//	betaBuffer->Clear(Color(0));
+//
+//	material->u_InputTexture = alphaBuffer->colorBuffer;
+//
+//	if (alphaBuffer->hasDepthBuffer)
+//	{
+//		material->u_DepthTexture = alphaBuffer->depthBuffer;
+//	}
 	
-	material->u_InputTexture = alphaBuffer->colorBuffer;
+	//material->Enable();
 	
-	if (alphaBuffer->hasDepthBuffer)
-	{
-		material->u_DepthTexture = alphaBuffer->depthBuffer;
-	}
-	
-	material->Enable();
-	
-	DrawShape(Shapes::quad);
+	//DrawShape(Shapes::quad);
 }

@@ -10,14 +10,18 @@
 
 class Transform
 {
+private:
+	friend class Camera;
 	Matrix4 modelMatrix;
 	
-public:
 	Vector3 position;
 	Vector2 scale;
 	float rotation;
 	
+public:
+	
 	bool consistant = false;
+	bool dirty = true;
 	
 	Transform ();
 	Transform (const Vector3& position, const Vector2& scale, float rotation);
@@ -41,6 +45,7 @@ public:
 	void Move (Vector2 v);
 	void SetScale (Vector2 v);
 	void SetRotation (float f);
+	void Rotate (float f);
 	
 	Matrix4& GetMatrix ();
 	

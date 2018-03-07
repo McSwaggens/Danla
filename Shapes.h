@@ -18,4 +18,4 @@ namespace Shapes
 
 extern int drawCalls;
 
-void DrawShape (HAttributeBatch shape);
+void DrawShape (HAttributeBatch& shape);

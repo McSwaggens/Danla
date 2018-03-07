@@ -13,18 +13,50 @@ class HandleLink
 {
 public:
 	int references;
+	Object* object;
 	
 	HandleLink (Object& object);
-	HandleLink (Object* object);
 	
-	void SoftUnlink ();
-	void HardUnlink ();
+	inline HandleLink (Object* object);
+	inline void SoftUnlink ();
 	
-	void AddReference ();
-	void PopReference ();
+	inline void HardUnlink ();
+	inline void AddReference ();
 	
-	Object* object;
+	inline void PopReference ();
 };
+
+inline HandleLink::HandleLink (Object* object)
+{
+	this->object = object;
+	references = 0;
+}
+
+inline void HandleLink::AddReference ()
+{
+	references++;
+}
+
+inline void HandleLink::SoftUnlink ()
+{
+	object = 0;
+}
+
+inline void HandleLink::HardUnlink ()
+{
+	delete object;
+	SoftUnlink ();
+}
+
+inline void HandleLink::PopReference ()
+{
+	references--;
+	
+	if (references == 0)
+	{
+		HardUnlink ();
+	}
+}
 
 template<typename T>
 class Handle
@@ -47,7 +79,7 @@ public:
 	template<typename Other>
 	inline Handle<Other>* CastTo ();
 	
-	inline T* operator->();
+	inline T* operator->() const;
 	inline Handle<T>& operator=(const Handle<T>& rh);
 	inline Handle<T>& operator=(const Handle<T>* rh);
 	
@@ -61,7 +93,7 @@ public:
 	bool operator!=(const void* rh);
 	
 	template<typename U>
-	inline operator Handle<U> () const;
+	inline operator Handle<U> ();
 	
 	inline explicit operator bool() const;
 	inline operator bool ();
@@ -108,9 +140,9 @@ Handle<T>::~Handle ()
 }
 
 template<typename T>
-inline T* Handle<T>::operator->()
+inline T* Handle<T>::operator->() const
 {
-	return (T*)link->object;
+	return reinterpret_cast<T*>(link->object);
 }
 
 template<typename T>
@@ -256,7 +288,7 @@ inline Handle<T>::operator bool ()
 
 template<typename T>
 template<typename U>
-Handle<T>::operator Handle<U> () const
+Handle<T>::operator Handle<U> ()
 {
-	return Handle<U>((U*)((T*)link->object));
+	return reinterpret_cast<Handle<U>*>(this);
 }

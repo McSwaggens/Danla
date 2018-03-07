@@ -18,8 +18,11 @@ void TestActor::Tick ()
 {
 
 	
-//	float change = IsKeyDown(Keys::Q) ? 1.0f : IsKeyDown(Keys::E) ? -1.0f : 0.0f;
-//	transform.rotation += change * logicDelta;
+	float change = IsKeyDown(Keys::Q) ? 1.0f : IsKeyDown(Keys::E) ? -1.0f : 0.0f;
+	if (change != 0)
+	{
+		transform.Rotate(change * logicDelta);
+	}
 }
 
 void TestActor::Render ()
@@ -38,7 +41,7 @@ void TestActor::OnCreated ()
 	m = count;
 	count++;
 	
-	transform.position = (Vector2((sin(m) * m) / (5.0f), (cos(m) * m) / 5.0f));
+	transform.SetPosition (Vector2((sin(m) * m) / (5.0f), (cos(m) * m) / 5.0f));
 }
 
 void TestActor::OnDestroyed ()

@@ -79,14 +79,14 @@ void Shapes::Initialize ()
 	matrixQuad = new AttributeBatch({ quadVertices, quadUV, matrixBuffer });
 }
 
-void DrawShape (HAttributeBatch shape)
+void DrawShape (HAttributeBatch& shape)
 {
 	bool usePositionBuffer = shape->buffers.size() > 2;
 	
 	shape->Enable();
 	
 	// Assuming vertices is element 0
-	HAttributeBuffer<Vector2> vertexBuffer = shape->buffers[0].CastTo<AttributeBuffer<Vector2>>();
+	HAttributeBuffer<Vector2> vertexBuffer = shape->buffers[0];
 	
 	int drawCount = 1;
 	

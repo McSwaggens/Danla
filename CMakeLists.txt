@@ -10,9 +10,11 @@ add_executable(Danla Danla.cpp Danla.h Buffer.h Buffer.cpp Handle.cpp Handle.h M
         UFloat.h Effect.cpp Effect.h PostProcessingStack.cpp PostProcessingStack.h Shapes.cpp Shapes.h Color.cpp Color.h
         Math.h PostProcessing.h PostProcessing.cpp TextureUnit.cpp TextureUnit.h Input.h Input.cpp Keys.h MouseKeys.h
         IVector2.h IVector2.cpp SafeList.cpp SafeList.h Entity.cpp Entity.h Actor.cpp Actor.h World.cpp World.h
-        RenderGroup.cpp RenderGroup.h TestActor.cpp TestActor.h Transform.h Transform.cpp Vector3.h Vector3.cpp Camera.cpp Camera.h Matrix4.h Matrix4.cpp Matrix2D.cpp Matrix2D.h)
+        RenderGroup.cpp RenderGroup.h TestActor.cpp TestActor.h Transform.h Transform.cpp Vector3.h Vector3.cpp Camera.cpp Camera.h Matrix4.h Matrix4.cpp Matrix2D.cpp Matrix2D.h Laser.cpp Laser.h)
 
 message(${CMAKE_BUILD_TYPE})
+
+#set(CMAKE_CXX_FLAGS "-Ofast")
 
 target_link_libraries(Danla glfw3 glew32 SOIL opengl32 gdi32)
 

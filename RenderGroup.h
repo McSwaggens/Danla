@@ -67,6 +67,11 @@ template<typename T>
 void RenderGroup<T>::Add (T position)
 {
 	positionBuffer.push_back(position);
+	
+	if (positionBuffer.size() >= 100)
+	{
+		Render ();
+	}
 }
 
 template<typename T>

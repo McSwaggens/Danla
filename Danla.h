@@ -19,6 +19,7 @@ extern HWorld world;
 
 MATERIAL(UnitMaterial)
 	TEXTURE(u_Texture, 0);
+	TEXTURE(u_BloomTexture, 1);
 END_MATERIAL;
 
 extern HUnitMaterial unitMaterial;

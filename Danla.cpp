@@ -17,8 +17,10 @@
 #include "Input.h"
 #include "TestActor.h"
 #include "Camera.h"
+#include "Laser.h"
+#include "UFloat.h"
 
-//#include <windows.h>
+#include <windows.h>
 
 //#include <signal.h>
 
@@ -31,7 +33,18 @@ HWindow window;
 MATERIALO (GaussianBlur, PostProcessorMaterial)
 END_MATERIAL;
 
+MATERIALO (BloomBlur, PostProcessorMaterial)
+	UNIFORM(UFloat, u_Split);
+END_MATERIAL;
+
 MATERIALO (VisualDepth, PostProcessorMaterial)
+END_MATERIAL;
+
+MATERIALO (Plain, PostProcessorMaterial)
+	TEXTURE(u_BloomTexture, 2);
+END_MATERIAL;
+
+MATERIALO (HDRExtractor, PostProcessorMaterial)
 END_MATERIAL;
 
 MATERIALO (SSAO, PostProcessorMaterial)
@@ -40,9 +53,13 @@ END_MATERIAL;
 
 HGaussianBlur gaussianBlurHorizontal;
 HGaussianBlur gaussianBlurVertical;
+HBloomBlur bloomBlurHorizontal;
+HBloomBlur bloomBlurVertical;
 HUnitMaterial unitMaterial;
 HVisualDepth visualDepth;
 HSSAO ssao;
+HHDRExtractor hdrExtractor;
+HPlain plain;
 
 HWorld world;
 
@@ -82,9 +99,8 @@ void StartDanla ()
 //		printf("ERROR: Could not set control handler\n");
 //	}
 	
-//	HANDLE currentProcess = GetCurrentProcess();
-//	SetProcessAffinityMask(currentProcess, 1UL << 3);
-	
+	HANDLE currentProcess = GetCurrentProcess();
+	SetProcessAffinityMask(currentProcess, 1UL << 3);
 	
 	printf ("Starting Danla...\n");
 	
@@ -125,11 +141,26 @@ void StartDanla ()
 	HShader gaussianShaderVertical = CreateShader ("GaussianBlurVertical");
 	gaussianBlurVertical = new GaussianBlur (gaussianShaderVertical);
 	
+	HShader bloomBlurHorizontalShader = CreateShader ("BloomBlurHorizontal");
+	bloomBlurHorizontal = new BloomBlur (bloomBlurHorizontalShader);
+	
+	HShader bloomBlurVerticalShader = CreateShader ("BloomBlurVertical");
+	bloomBlurVertical = new BloomBlur (bloomBlurVerticalShader);
+	
 	HShader unitShader = CreateShader ("Unit");
 	unitMaterial = new UnitMaterial(unitShader);
 	
+	HShader laserShader = CreateShader ("Laser");
+	laserMaterial = new LaserMaterial(laserShader);
+	
+	HShader hdrExtractorShader = CreateShader ("HDRExtractor");
+	hdrExtractor = new HDRExtractor(hdrExtractorShader);
+	
 	HShader depthShader = CreateShader("Depth");
 	visualDepth = new VisualDepth(depthShader);
+	
+	HShader plainShader = CreateShader("Plain");
+	plain = new Plain (plainShader);
 	
 	HShader ssaoShader = CreateShader("AmbientOcclusion");
 	ssao = new SSAO(ssaoShader);
@@ -174,41 +205,37 @@ void MainGameLoop ()
 {
 	HFrameBuffer renderBuffer = new FrameBuffer (true, true, true, true);
 	renderBuffer->colorBuffer->SetInterpolationNearest();
+	renderBuffer->hdrBuffer->SetInterpolationNearest();
+	
 	
 	HFrameBuffer gaussianBufferQuarterHDA = new FrameBuffer (true, false, IVector2(1920 / 4, 1080 / 4));
 	HFrameBuffer gaussianBufferQuarterHDB = new FrameBuffer (true, false, IVector2(1920 / 4, 1080 / 4));
 	HFrameBuffer gaussianBufferEighthHDA = new FrameBuffer (true, false, IVector2(1920 / 8, 1080 / 8));
 	HFrameBuffer gaussianBufferEighthHDB = new FrameBuffer (true, false, IVector2(1920 / 8, 1080 / 8));
 	
-	HFrameBuffer alphaBuffer = new FrameBuffer (true, true, true, true);
-	HFrameBuffer betaBuffer = new FrameBuffer (true, true, true, true);
-	HFrameBuffer charlieBuffer = new FrameBuffer (true, true, true, true);
-	alphaBuffer->colorBuffer->SetInterpolationNearest();
-	betaBuffer->colorBuffer->SetInterpolationNearest();
-	charlieBuffer->colorBuffer->SetInterpolationNearest();
+//	HFrameBuffer alphaBuffer = new FrameBuffer (true, false, true, false);
+//	HFrameBuffer betaBuffer = new FrameBuffer (true, true, true, false);
+//	HFrameBuffer charlieBuffer = new FrameBuffer (true, true, true, false);
+//	alphaBuffer->colorBuffer->SetInterpolationNearest();
+//	betaBuffer->colorBuffer->SetInterpolationNearest();
+//	charlieBuffer->colorBuffer->SetInterpolationNearest();
 	
-	
-	HPostProcessingStack ppStack = new PostProcessingStack(alphaBuffer, betaBuffer);
-	ppStack->effects = {  };
-	
-	int numberOfTriangles = 1;
 	
 	HCamera camera = new Camera (0);
 	world->camera = camera;
 	camera->PreComputeMatrix();
 	
 	HTestActor testActor = Spawn(world, new TestActor(Vector2(0, 0)));
-	//HTestActor testActor2 = Spawn(world, new TestActor(Vector2(1, 1)));
 	
+	HLaser laser = Spawn(world, new Laser(), Vector2(2, 2));
 	
 	HTexture unitTexture = LoadTexture("../Textures/ColorTest.png");
+	HTexture unitBloomTexture = LoadTexture("../Textures/BloomTest.png");
+	unitMaterial->u_BloomTexture = unitBloomTexture;
 	unitMaterial->u_Texture = unitTexture;
 	
 	float cpuFPS = 0;
 	float totalFPS = 0;
-	
-	float cpuFPSSum = 0;
-	float totalFPSSum = 0;
 	
 	while (running)
 	{
@@ -242,18 +269,6 @@ void MainGameLoop ()
 			break;
 		}
 		
-		if (IsKeyDown(Keys::Up))
-		{
-			numberOfTriangles++;
-		}
-		
-		if (IsKeyDown(Keys::Down))
-		{
-			if (numberOfTriangles != 0)
-			{
-				numberOfTriangles--;
-			}
-		}
 		
 		camera->zoom += Reverse(GetScroll());
 		
@@ -263,123 +278,149 @@ void MainGameLoop ()
 		movementVector.y -= IsKeyDown(Keys::S);
 		movementVector.y += IsKeyDown(Keys::W);
 		
-		//movementVector.x *= sin(time) / (PIx2);
-		//movementVector.y *= cos(time) / (PIx2);
 		
 		camera->position += movementVector * camera->zoom * frameDelta;
 		
 		
 		if (IsMouseKeyDown(MouseKeys::Left))
 		{
-			Spawn(world, new TestActor());
+			//Spawn(world, new TestActor());
 		}
+		
 		
 		
 		static float lastTime = 0;
 		static int ticksThisSecond = 0;
+		static int framesThisSecond = 0;
 		
-		static float lastTickTime = 0.0f;
+		static float culmination = 0.0f;
+		static const float logicFrequency = (1.0f/((float)60.0f));
 		
-		if (time - lastTickTime > (1.0f/((float)tickRate)))
+		culmination += frameDelta;
+		
+		if (culmination >= logicFrequency)
 		{
-			logicDelta = time - lastTickTime;
-			lastTickTime = time;
+			logicDelta = culmination;
+			culmination = culmination - logicFrequency;
 			world->ComputeActors();
+			ticksThisSecond++;
 		}
 		
-		ticksThisSecond++;
 		
+		framesThisSecond++;
 		
-		// Cool gradient
-		// 89 89 222
-		// 140 184 255
+		float renderStartTime = GetTime();
 		
 		renderBuffer->BindDraw();
 		
 		renderBuffer->Clear(Color(1.0, 1.0, 1.0));
 		
-		float aspect = 16.0f / 9.0f;
-		Vector2 resolution = window->GetSize();
-		Vector2 pixelation = Vector2(32 * aspect, 32);
-		pixelation = Mix(pixelation, resolution, camera->zoom / 100.0f);
 		
-		IVector2 ipixelation = IVector2((int)pixelation.x, (int)pixelation.y);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		
+		
+		static float _lastTime = 0;
+		static int _framesThisSecond = 0;
+		static int _ticksThisSecond = 0;
+		
+		if (time - _lastTime >= 1.0f)
+		{
+			_framesThisSecond = framesThisSecond;
+			_ticksThisSecond = ticksThisSecond;
+			framesThisSecond = 0;
+			ticksThisSecond = 0;
+			_lastTime = time;
+		}
 		
 		if (time - lastTime >= 1.0f)
 		{
 			std::stringstream newTitle;
-			newTitle << "Danla, ";
-			newTitle << "TestActors: ";
-			newTitle << TestActor::count;
-			newTitle << ", Rendered: " << TestActor::rendered;
-			newTitle << ", FPS: ";
-			newTitle << totalFPS;
-			newTitle << ", CPU: " << cpuFPS << "ms";
-			newTitle << ", Render Resolution: ";
-			newTitle << "Width: " << ipixelation.x << " Height: " << ipixelation.y;
-			newTitle << ", 50 / Zoom: " << (camera->zoom / 100.0f);
+			newTitle << "Danla, "
+			<< "TestActors: "
+			<< TestActor::count
+			<< ", Rendered: " << TestActor::rendered
+			<< ", FPS: " << totalFPS << ", (counted: " << _framesThisSecond << ")"
+			<< ", CPU: " << cpuFPS << "ms"
+			<< ", Ticks: " << _ticksThisSecond;
 			window->SetTitle(newTitle.str());
 			
-			ticksThisSecond = 0;
 			lastTime = time;
 		}
 		
 		TestActor::rendered = 0;
 		
-		renderBuffer->Viewport(ipixelation);
-		
 		world->Render();
 		world->DispatchRenderGroups();
 		
-		FrameBuffer::Copy(renderBuffer, ipixelation, charlieBuffer, false, true);
-		FrameBuffer::Copy(charlieBuffer, renderBuffer, false, true);
+		
+		glDisable(GL_BLEND);
+		
+		FrameBuffer::Copy(renderBuffer, gaussianBufferQuarterHDA, false, false, 1);
+		
+//		PostProcess (gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, bloomBlurHorizontal);
+//		PostProcess (gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, bloomBlurVertical);
+		
+		FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, false, false, 0);
+		
+		
+//		PostProcess (gaussianBufferEighthHDA, gaussianBufferEighthHDB, bloomBlurHorizontal);
+//		PostProcess (gaussianBufferEighthHDB, gaussianBufferEighthHDA, bloomBlurVertical);
+		
+		FrameBuffer::Copy(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, false, false, 0);
+		
+		
+//		PostProcess (gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, bloomBlurHorizontal);
+//		PostProcess (gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, bloomBlurVertical);
+		
+		FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, false, false, 0);
+		
+		
+//		PostProcess(renderBuffer, alphaBuffer, plain);
+		
+		
+//		PostProcess(renderBuffer, gaussianBufferQuarterHDA, visualDepth);
+//
+//		PostProcess(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, gaussianBlurVertical);
+//		PostProcess(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, gaussianBlurHorizontal);
+//
+//		FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferEighthHDA, true);
+//
+//		PostProcess(gaussianBufferEighthHDA, gaussianBufferEighthHDB, gaussianBlurHorizontal);
+//		PostProcess(gaussianBufferEighthHDB, gaussianBufferEighthHDA, gaussianBlurVertical);
+//
+//		FrameBuffer::Copy(gaussianBufferEighthHDA, charlieBuffer, true);
+//
+//		ssao->u_BlurredDepth = charlieBuffer->colorBuffer;
+//		ssao->u_DepthTexture = alphaBuffer->colorBuffer;
+//		PostProcess(renderBuffer, betaBuffer, ssao);
 		
 
-		PostProcess(renderBuffer, gaussianBufferQuarterHDA, visualDepth);
-
-		PostProcess(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, gaussianBlurVertical);
-		PostProcess(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, gaussianBlurHorizontal);
-
-		FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferEighthHDA, true);
-
-		PostProcess(gaussianBufferEighthHDA, gaussianBufferEighthHDB, gaussianBlurHorizontal);
-		PostProcess(gaussianBufferEighthHDB, gaussianBufferEighthHDA, gaussianBlurVertical);
-
-		FrameBuffer::Copy(gaussianBufferEighthHDA, charlieBuffer, true);
+//		if (IsKeyDown(Keys::B))
+//		{
+//			FrameBuffer::Copy(betaBuffer, gaussianBufferQuarterHDA, true);
+//
+//			PostProcess(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, gaussianBlurVertical);
+//			PostProcess(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, gaussianBlurHorizontal);
+//
+//			FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferEighthHDA, true);
+//
+//			PostProcess(gaussianBufferEighthHDA, gaussianBufferEighthHDB, gaussianBlurHorizontal);
+//			PostProcess(gaussianBufferEighthHDB, gaussianBufferEighthHDA, gaussianBlurVertical);
+//		}
 		
-		ssao->u_BlurredDepth = charlieBuffer->colorBuffer;
-		ssao->u_DepthTexture = alphaBuffer->colorBuffer;
-		PostProcess(renderBuffer, betaBuffer, ssao);
 		
-		if (IsKeyDown(Keys::B))
-		{
-			FrameBuffer::Copy(betaBuffer, gaussianBufferQuarterHDA, true);
-
-			PostProcess(gaussianBufferQuarterHDA, gaussianBufferQuarterHDB, gaussianBlurVertical);
-			PostProcess(gaussianBufferQuarterHDB, gaussianBufferQuarterHDA, gaussianBlurHorizontal);
-
-			FrameBuffer::Copy(gaussianBufferQuarterHDA, gaussianBufferEighthHDA, true);
-
-			PostProcess(gaussianBufferEighthHDA, gaussianBufferEighthHDB, gaussianBlurHorizontal);
-			PostProcess(gaussianBufferEighthHDB, gaussianBufferEighthHDA, gaussianBlurVertical);
-		}
+		PrintErrors();
 		
-		//FrameBuffer::Copy(renderBuffer, defaultFrameBuffer, false);
+//		FrameBuffer::CopyToDefaultFrameBuffer(alphaBuffer);
 		
-		FrameBuffer::Copy(IsKeyDown(Keys::B) ? gaussianBufferEighthHDA : betaBuffer, defaultFrameBuffer, true);
+		float endTimeCPU = GetTime ();
 		
-		float endTime = GetTime ();
-		
-		cpuFPS = (endTime - startTime) * 1000;
+		cpuFPS = (endTimeCPU - startTime) * 1000.0f;
 		
 		window->SwapBuffers ();
 		
-		endTime = GetTime ();
-		totalFPS = 1.0f / (endTime - startTime);
-		
-		totalFPSSum += totalFPS;
-		cpuFPSSum += cpuFPS;
-		
+		float endTime = GetTime ();
+		totalFPS = 1.0f / (endTime - renderStartTime);
 	}
 }

@@ -8,16 +8,16 @@
 typedef std::string String;
 typedef char* CString;
 
-inline void* operator new (size_t sz)
-{
-	if (sz > 1024)
-	{
-		printf ("Allocating %i bytes of memory.\n", sz);
-	}
-	
-	void* ptr = malloc(sz);
-	return ptr;
-}
+//inline void* operator new (size_t sz)
+//{
+//	if (sz > 1024)
+//	{
+//		printf ("Allocating %i bytes of memory.\n", sz);
+//	}
+//
+//	void* ptr = malloc(sz);
+//	return ptr;
+//}
 
 #include "Handle.h"
 #include "Object.h"

@@ -58,7 +58,7 @@ void World::ComputeActors ()
 
 void World::DispatchRenderGroups ()
 {
-	for (auto renderGroup : renderGroups)
+	for (auto& renderGroup : renderGroups)
 	{
 		renderGroup->Render();
 	}

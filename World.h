@@ -53,3 +53,13 @@ inline Handle<T> Spawn (HWorld world, T* t)
 	world->actors.Add(instance);
 	return instance;
 }
+
+template<typename T>
+inline Handle<T> Spawn (HWorld world, T* t, Vector2 location)
+{
+	Handle<T> instance (t);
+	instance->world = world;
+	instance->transform.SetPosition(location);
+	world->actors.Add(instance);
+	return instance;
+}

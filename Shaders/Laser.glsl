@@ -25,11 +25,9 @@ layout (location = 1) out vec4 hdr;
 in vec2 uv;
 
 uniform float time;
-uniform sampler2D u_Texture;
-uniform sampler2D u_BloomTexture;
 
 void main ()
 {
-	color = texture2D(u_Texture, uv);
-	hdr = texture2D(u_BloomTexture, uv);
+	color = vec4(1, 0, 0, 1);
+	hdr = vec4(5.0, 1, 13.0, 1);
 }

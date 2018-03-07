@@ -54,4 +54,6 @@ void main ()
 	sum += texture2D(u_InputTexture, gaussianBlurTexCoords[10]) * 0.090743;
 
 	color = sum;
+
+	//color = blur13(u_InputTexture, uv, textureSize(u_InputTexture, 1), vec2(0, 1));
 }
